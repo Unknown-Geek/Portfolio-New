@@ -66,19 +66,32 @@ find_site_directory() {
     echo "$best_dir"
 }
 
+FORCE_REBUILD=false
+TARGET_URL="$DEFAULT_TARGET_URL"
+
+for arg in "$@"; do
+    case "$arg" in
+        --force|-f) FORCE_REBUILD=true ;;
+        http*) TARGET_URL="$arg" ;;
+    esac
+done
+
 # 1. Clone website using HTTrack
-SITE_DIR=$(find_site_directory "$CDIR")
+if [ "$FORCE_REBUILD" = true ]; then
+    SITE_DIR=""
+else
+    SITE_DIR=$(find_site_directory "$CDIR")
+fi
 
 if [ -n "$SITE_DIR" ] && [ -d "$SITE_DIR" ]; then
     echo "1. Found existing local domain folder with website content: $(basename "$SITE_DIR")"
 else
-    echo "1. Cloning website using HTTrack from $DEFAULT_TARGET_URL..."
+    echo "1. Cloning website using HTTrack from $TARGET_URL..."
     if ! command -v httrack &> /dev/null; then
         echo "Error: httrack command not found. Please install httrack or ensure it is in PATH."
         exit 1
     fi
 
-    TARGET_URL="${1:-$DEFAULT_TARGET_URL}"
     echo "Target URL: $TARGET_URL"
 
     rm -rf "$TEMP_DIR"

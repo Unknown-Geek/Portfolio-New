@@ -1,0 +1,47 @@
+name: Scrape Framer Site & Deploy
+
+on:
+  schedule:
+    # Runs automatically every day at midnight UTC
+    - cron: '0 0 * * *'
+  # Allows manual execution anytime from the GitHub Actions UI
+  workflow_dispatch:
+
+# Grant workflow permission to write commits back to the repository
+permissions:
+  contents: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y httrack perl
+
+      - name: Make Script Executable
+        run: chmod +x ./fix_website.sh
+
+      - name: Execute Mirror and Fix Script
+        run: ./fix_website.sh --force
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stage all modified and untracked files
+          git add .
+
+          # Only commit and push if changes are detected
+          if ! git diff --quiet || ! git diff --cached --quiet; then
+            git commit -m "Automated update: Mirror Framer site and strip badge"
+            git push
+          else
+            echo "No changes detected. Skipping push."
+          fi
