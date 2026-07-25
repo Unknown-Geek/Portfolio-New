@@ -166,6 +166,9 @@ fi
 # 3. Fix relative links and domain rewrites
 echo "3. Cleaning link references in HTML files..."
 find "$CDIR" -maxdepth 2 -name "*.html" -type f | while read -r html_file; do
+    # Strip dynamic HTTrack and Framer publication timestamp comments to prevent false git diffs
+    perl -pi -e 's/^\s*<!--\s*(?:Mirrored from|Published)\b.*?-->\s*\n?//i' "$html_file" 2>/dev/null || true
+
     sed_replace "https://www.shravanpandala.framer.website/" "./" "$html_file"
     sed_replace "https://shravanpandala.framer.website/" "./" "$html_file"
     sed_replace "https://www.shravanpandala.me/" "./" "$html_file"
@@ -186,7 +189,7 @@ done
 
 # 4. Inject Framer Badge Removal Snippets
 echo "4. Removing 'Made with Framer' badge..."
-BADGE_INJECTION='<style id="remove-framer-badge">#framer-badge-container, #__framer-badge-container, #framer-badge, .framer-badge-container, a[href*="framer.com/?"], a[href*="framer.com?utm"], a[href="https://www.framer.com/"], a[href="https://framer.com/"] { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }</style><script id="remove-framer-badge-js">(function(){function r(){var s=["#framer-badge-container","#__framer-badge-container","#framer-badge",".framer-badge-container","a[href*=\"framer.com/?\"]","a[href*=\"framer.com?utm\"]"];s.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.remove();});});}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",r);new MutationObserver(r).observe(document.documentElement,{childList:true,subtree:true});})();</script>'
+BADGE_INJECTION='<style id="remove-framer-badge">#framer-badge-container, #__framer-badge-container, #framer-badge, .framer-badge-container, a[href*="framer.com/?"], a[href*="framer.com?utm"], a[href="https://www.framer.com/"], a[href="https://framer.com/"] { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }</style><script id="remove-framer-badge-js">(function(){function r(){var s=["#framer-badge-container","#__framer-badge-container","#framer-badge",".framer-badge-container","a[href*=\\"framer.com/?\\"]","a[href*=\\"framer.com?utm\\"]"];s.forEach(function(q){document.querySelectorAll(q).forEach(function(e){e.remove();});});}document.addEventListener("DOMContentLoaded",r);window.addEventListener("load",r);new MutationObserver(r).observe(document.documentElement,{childList:true,subtree:true});})();</script>'
 
 find "$CDIR" -maxdepth 2 -name "*.html" -type f | while read -r html_file; do
     sed_replace 'content="Made with Framer"' 'content="Shravan Pandala - Portfolio"' "$html_file"
